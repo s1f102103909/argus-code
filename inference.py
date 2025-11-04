@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	parser.add_argument('--height_narrow', type=int, default=512, help='Height of the narrow image')
 
 	parser.add_argument("--frame_rate", type=int, default=None, help="Frame rate of the video.")
-	parser.add_argument('--frame_interval', type=int, default=6, help='Interval between frames.')
+	parser.add_argument('--frame_interval', type=int, default=None, help='Interval between frames.')
 	parser.add_argument('--fixed_start_frame', action='store_true', help='for each video, start from the first frame, for debugging')
 	parser.add_argument('--full_sampling', action='store_true', help='Sample all frames in the video.')
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 	parser.add_argument('--dense_calibration', action='store_true', help='Dense calibration, i.e., use all frames for calibration.')
 	parser.add_argument('--calibration_img_size', type=int, default=512, help='long side of image for MASt3R.')
 
-	parser.add_argument("--num_frames", type=int, default=25, help="Number of frames to generate.")
+	parser.add_argument("--num_frames", type=int, default=None, help="Number of frames to generate.")
 	parser.add_argument('--blend_frames', type=int, default=0, help='Number of frames to blend.')
 	parser.add_argument("--num_frames_batch", type=int, default=25, help="Number of frames to generate.")
 	parser.add_argument("--decode_chunk_size", type=int, default=10, help="Decode chunk size.")
@@ -89,8 +89,14 @@ if __name__ == "__main__":
 		args.calibration_cache_path = args.calibration_cache_path + f'_{args.num_frames}'
 		os.makedirs(args.calibration_cache_path, exist_ok=True)
 
-	weight_dtype = torch.float32
-	accelerator = Accelerator(mixed_precision='no')
+	accelerator = Accelerator(mixed_precision='bf16')
+	if accelerator.mixed_precision == "bf16":
+		weight_dtype = torch.bfloat16
+	elif accelerator.mixed_precision == "fp16":
+		weight_dtype = torch.float16
+	else:  # "no"
+		weight_dtype = torch.float32
+
 
 	unet = UNetSpatioTemporalConditionModel.from_pretrained(
 		pretrained_model_name_or_path=args.unet_path,
@@ -206,10 +212,12 @@ if __name__ == "__main__":
 					convention_inverse = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
 
 					rolls, pitches, yaws = np.zeros(len(poses)), np.zeros(len(poses)), np.zeros(len(poses))
-					R1 = poses[0, :3, :3].cpu().numpy()
+					#R1 = poses[0, :3, :3].cpu().numpy()
+					R1 = poses[0, :3, :3].float().cpu().numpy() #修正
 
 					for i in range(1, len(poses)):
-						R2 = poses[i, :3, :3].cpu().numpy()
+						#R2 = poses[i, :3, :3].cpu().numpy()
+						R2 = poses[i, :3, :3].float().cpu().numpy() #修正
 						roll, pitch, yaw = rotation_matrix_to_euler(convention_inverse @ R2.T @ R1 @ convention_rotation, z_down=True) # rotation matrix are camera-to-world, cam1 --> cam2 is R2.T @ R1
 						rolls[i] = -roll
 						pitches[i] = pitch
@@ -258,6 +266,4 @@ if __name__ == "__main__":
 							replacement_sampling=args.replacement_sampling,
 							narrow=args.narrow,
 							width_narrow=args.width_narrow, height_narrow=args.height_narrow,
-							)
-
-		
+							)	

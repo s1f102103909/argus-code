@@ -150,7 +150,7 @@ def get_camera_params_from_frames(frames: torch.Tensor,
 
     frames = (frames + 1) / 2
     for i, frame in enumerate(frames):
-        img = F.to_pil_image(frame)
+        img = F.to_pil_image(frame.float()) #修正
         img.save(os.path.join(cache_dir, f"frame_{i}.png"))
         img_paths.append(os.path.join(cache_dir, f"frame_{i}.png"))
 

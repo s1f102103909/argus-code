@@ -390,9 +390,12 @@ def pers2equi_batch(img: torch.Tensor,
     persp = torch.nn.functional.grid_sample(img, torch.stack((lon_map, lat_map), dim=-1), mode='bilinear', align_corners=False) # (B, 3, H, W)
 
     mask = mask * inverse_mask # (B, H, W)
-    persp = persp * mask.unsqueeze(1) # (B, 3, H, W)
+    #persp = persp * mask.unsqueeze(1) # (B, 3, H, W)
+    mask_b = mask.to(torch.bool).unsqueeze(1) #修正
+    persp.masked_fill_(~mask_b, 0) #修正
 
-    persp = persp * 2 - 1
+    #persp = persp * 2 - 1
+    persp.mul_(2).add_(-1)
 
     if return_mask:
         mask = mask.unsqueeze(1)

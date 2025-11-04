@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Set cache directories to the current working directory
+export HF_HOME=$(pwd)/hf_cache
+export TRITON_CACHE_DIR=$(pwd)/triton_cache
+export CUDA_VISIBLE_DEVICES=0,1
+export PYTORCH_ALLOC_CONF="expandable_segments:True,max_split_size_mb:256"
+# 互換として併用するなら:
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,max_split_size_mb:256"
+mkdir -p $HF_HOME $TRITON_CACHE_DIR # Ensure directories exist
+
 unet_path=$1
 val_folder_or_video_path=$2
 val_save_folder=$3
@@ -17,7 +26,7 @@ else
 fi
 
 echo "Processing ${#video_list[@]} videos"
-accelerate launch --num_processes 1 inference.py \
+accelerate launch --num_processes 2 --mixed_precision bf16 inference.py \
     --val_base_folder ${video_list} \
     --val_save_folder ${val_save_folder} \
     --unet_path $unet_path \
@@ -25,15 +34,18 @@ accelerate launch --num_processes 1 inference.py \
     --decode_chunk_size 10 \
     --noise_aug_strength 0.02 \
     --guidance_scale $guidance_scale \
-    --frame_rate 5 \
     --height 512 --width 1024 \
     --fixed_start_frame \
-    --num_frames 25 \
     --num_inference_steps $num_inference_steps \
     --inference_final_rotation 0 \
     --rotation_during_inference \
     --extended_decoding \
     --predict_camera_motion \
-    --blend_decoding_ratio 16 
+    --blend_decoding_ratio 16 \
+    --frame_interval 1
+
+    #--frame_rate 5 \
+    #--num_frames 25 \
+    #--full_sampling
 
     

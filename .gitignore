@@ -205,3 +205,6 @@ __pycache__/
 *.pyd
 *.pyw
 *.pyz
+# caches & artifacts
+hf_cache/
+triton_cache/

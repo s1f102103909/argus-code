@@ -4,3 +4,6 @@
 [submodule "mega-sam"]
 	path = mega-sam
 	url = https://github.com/Red-Fairy/mega-sam.git
+[submodule "asmk"]
+	path = asmk
+	url = https://github.com/jenicek/asmk
