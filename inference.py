@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	parser.add_argument('--height_narrow', type=int, default=512, help='Height of the narrow image')
 
 	parser.add_argument("--frame_rate", type=int, default=None, help="Frame rate of the video.")
-	parser.add_argument('--frame_interval', type=int, default=None, help='Interval between frames.')
+	parser.add_argument('--frame_interval', type=int, default=6, help='Interval between frames.')
 	parser.add_argument('--fixed_start_frame', action='store_true', help='for each video, start from the first frame, for debugging')
 	parser.add_argument('--full_sampling', action='store_true', help='Sample all frames in the video.')
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 	parser.add_argument('--dense_calibration', action='store_true', help='Dense calibration, i.e., use all frames for calibration.')
 	parser.add_argument('--calibration_img_size', type=int, default=512, help='long side of image for MASt3R.')
 
-	parser.add_argument("--num_frames", type=int, default=None, help="Number of frames to generate.")
+	parser.add_argument("--num_frames", type=int, default=25, help="Number of frames to generate.")
 	parser.add_argument('--blend_frames', type=int, default=0, help='Number of frames to blend.')
 	parser.add_argument("--num_frames_batch", type=int, default=25, help="Number of frames to generate.")
 	parser.add_argument("--decode_chunk_size", type=int, default=10, help="Decode chunk size.")
@@ -76,14 +76,27 @@ if __name__ == "__main__":
 	parser.add_argument('--fixed_rpy', action='store_true', help='Fixed rpy for all videos.')
 	parser.add_argument('--yaw_start', type=float, default=0., help='Start yaw., in degrees')
 	parser.add_argument('--noisy_rpy', type=float, default=0, help='add noise to rpy with this std.')
+	# ▼▼▼ 追加した部分 ▼▼▼
+	parser.add_argument('--seed', type=int, default=None, help='Random seed for reproducibility.')
+	# ▲▲▲ 追加した部分 ▲▲▲
 
 	args = parser.parse_args()
 	os.makedirs(args.val_save_folder, exist_ok=True)
 
 	# set a random seed based on time
-	random.seed(int(time.time()))
-	np.random.seed(int(time.time()))
-	torch.manual_seed(int(time.time()))
+	#random.seed(int(time.time()))
+	#np.random.seed(int(time.time()))
+	#torch.manual_seed(int(time.time()))
+	# ▼▼▼ 変更した部分 ▼▼▼
+	if args.seed is not None:
+		seed = args.seed
+	else:
+		seed = int(time.time())
+		
+	random.seed(seed)
+	np.random.seed(seed)
+	torch.manual_seed(seed)
+	# ▲▲▲ 変更した部分 ▲▲▲
 
 	if args.calibration_cache_path is not None:
 		args.calibration_cache_path = args.calibration_cache_path + f'_{args.num_frames}'

@@ -1,9 +1,11 @@
 #!/bin/bash
 
+echo "Cleaning up shared memory cache..."
+rm -rf /dev/shm/argus_fast_cache
+
 # Set cache directories to the current working directory
 export HF_HOME=$(pwd)/hf_cache
 export TRITON_CACHE_DIR=$(pwd)/triton_cache
-export CUDA_VISIBLE_DEVICES=0,1
 export PYTORCH_ALLOC_CONF="expandable_segments:True,max_split_size_mb:256"
 # 互換として併用するなら:
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,max_split_size_mb:256"
@@ -26,26 +28,28 @@ else
 fi
 
 echo "Processing ${#video_list[@]} videos"
-accelerate launch --num_processes 2 --mixed_precision bf16 inference.py \
+accelerate launch --num_processes 1 --mixed_precision bf16 inference.py \
     --val_base_folder ${video_list} \
     --val_save_folder ${val_save_folder} \
     --unet_path $unet_path \
     --pretrained_model_name_or_path stabilityai/stable-video-diffusion-img2vid \
-    --decode_chunk_size 10 \
-    --noise_aug_strength 0.02 \
+    --decode_chunk_size 16 \
+    --noise_aug_strength 0.01 \
+    --motion_bucket_id 50 \
     --guidance_scale $guidance_scale \
+    --frame_rate 24 \
     --height 512 --width 1024 \
     --fixed_start_frame \
+    --num_frames 96 \
     --num_inference_steps $num_inference_steps \
     --inference_final_rotation 0 \
     --rotation_during_inference \
     --extended_decoding \
-    --predict_camera_motion \
     --blend_decoding_ratio 16 \
-    --frame_interval 1
+    --blend_frames 8 \
+    --seed 42 \
+    --num_frames_batch 40 \
 
-    #--frame_rate 5 \
-    #--num_frames 25 \
-    #--full_sampling
+       # --predict_camera_motion \
 
     

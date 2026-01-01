@@ -162,8 +162,8 @@ class VideoDataset(Dataset):
 
             if self.dense_calibration:
                 frames_dense.append(frame)
-            #if len(frames) == self.sample_frames:
-            #    break
+            if len(frames) == self.sample_frames:
+                break
 
             for j in range(frame_interval - 1):
                 if self.dense_calibration:
@@ -178,12 +178,12 @@ class VideoDataset(Dataset):
 
         cap.release()
 
-#        if len(frames) < self.sample_frames:
-#            # append the last frame until we have enough frames
-#            for _ in range(self.sample_frames - len(frames)):
-#                frames.append(frames[-1])
-#                if self.dense_calibration:
-#                    frames_dense.extend([frames_dense[-1]] * frame_interval)
+        if len(frames) < self.sample_frames:
+            # append the last frame until we have enough frames
+            for _ in range(self.sample_frames - len(frames)):
+                frames.append(frames[-1])
+                if self.dense_calibration:
+                    frames_dense.extend([frames_dense[-1]] * frame_interval)
 
         video = torch.stack(frames).permute(0, 3, 1, 2).float() / 127.5 - 1 # Normalize to [-1, 1]
 

@@ -846,15 +846,6 @@ def sample_svd(args, accelerator, pipeline,
 				torch.cat([generated_frames_this[:, :, -blend_frames:].permute(0, 2, 1, 3, 4),
 						conditional_video_equi[:, num_frames_processed+blend_frames: num_frames_processed+num_frames_to_process]], 
 						dim=1)
-			#if round == 0:
-			#	conditional_video_input = conditional_video_equi[:, :num_frames_to_process]
-			#elif blend_frames > 0:
-			#	conditional_video_input = torch.cat([generated_frames_this[:, :, -blend_frames:].permute(0, 2, 1, 3, 4),
-			#									conditional_video_equi[:, num_frames_processed+blend_frames: num_frames_processed+num_frames_to_process]], 
-			#									dim=1)
-			#else:
-			#	conditional_video_input = conditional_video_equi[:, num_frames_processed: num_frames_processed+num_frames_to_process]
-
 			mask_this = mask[:, num_frames_processed: num_frames_processed+num_frames_to_process]
 			conditional_video_pers_this = conditional_video_pers[:, num_frames_processed: num_frames_processed+num_frames_to_process]
 			conditional_video_input = conditional_video_input + torch.randn_like(conditional_video_input, device=accelerator.device) * noise_aug_strength * mask_this
@@ -866,7 +857,7 @@ def sample_svd(args, accelerator, pipeline,
 				width=width,
 				num_frames=num_frames_to_process,
 				decode_chunk_size=decode_chunk_size,
-				motion_bucket_id=127,
+				motion_bucket_id=args.motion_bucket_id if hasattr(args, 'motion_bucket_id') else 127,
 				fps=fps,
 				num_inference_steps=num_inference_steps,
 				noise_aug_strength=noise_aug_strength,
@@ -892,19 +883,6 @@ def sample_svd(args, accelerator, pipeline,
 				generated_latents = torch.cat([generated_latents[:, :-blend_frames], 
 									blend_weight * generated_latents[:, -blend_frames:] + (1 - blend_weight) * generated_latents_this[:, :blend_frames],
 									generated_latents_this[:, blend_frames:]], dim=1)
-				#if blend_frames > 0:
-				#	bf = int(min(blend_frames, generated_latents.shape[1], generated_latents_this.shape[1]))
-				#	if bf > 0:
-				#		blend_weight = torch.linspace(1, 0, bf, device=accelerator.device, dtype=generated_latents.dtype).view(1, bf, 1, 1, 1)
-				#		generated_latents = torch.cat([
-				#			generated_latents[:, :-bf],
-				#			blend_weight * generated_latents[:, -bf:] + (1 - blend_weight) * generated_latents_this[:, :bf],
-				#			generated_latents_this[:, bf:]
-				#		], dim=1)
-				#	else:
-				#		generated_latents = torch.cat([generated_latents, generated_latents_this], dim=1)
-				#else:
-				#	generated_latents = torch.cat([generated_latents, generated_latents_this], dim=1)
 
 			if num_frames_remaining == num_frames_to_process:
 				break

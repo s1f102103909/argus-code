@@ -1,0 +1,20 @@
+rm results_game1_clips/*round* results_game1_clips/*input* results_game1_clips/*stack*
+
+nohup bash scripts/test/inference.sh checkpoints video/game1.mp4 results 2.5 40 > train.log 2>&1 & disown
+
+nohup bash run_all_clips.sh > train.log 2>&1 & disown
+
+rm results_movie1_clips/*round* results_movie1_clips/*input* results_movie1_clips/*stack*
+rm results_movie2_clips/*round* results_movie2_clips/*input* results_movie2_clips/*stack*
+rm results_movie3_clips/*round* results_movie3_clips/*input* results_movie3_clips/*stack*
+
+動画のFPS,推奨: 秒数 (segment),推奨: のりしろ (overlap),合計秒数,合計フレーム数 (num_frames),解説
+60 fps,1.0 秒,0.5 秒,1.5 秒,90 フレーム,今回の成功設定。動きが滑らか。
+30 fps,2.0 秒,1.0 秒,3.0 秒,90 フレーム,一般的な動画。秒数を2倍稼げます。
+24 fps,3.0 秒,1.0 秒,4.0 秒,96 フレーム,映画・シネマ系。かなり長く取れます。
+15 fps,4.0 秒,2.0 秒,6.0 秒,90 フレーム,防犯カメラやGifなど。
+
+
+game1.mp4 fps 60, 区切り1秒, overlap0.5秒, num_frames 90
+movie2.mp4 (LaLa Land) FPS 24 区切り3秒, overlap1秒, num_frames 96
+movie3.mp4 FPS 24 区切り3秒, overlap1秒, num_frames 96
