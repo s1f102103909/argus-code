@@ -48,11 +48,11 @@ if __name__ == "__main__":
     # ▼ 設定エリア ▼
     # ==========================================
     
-    URL = "https://www.youtube.com/watch?v=D4JmMBC28x8" 
-    OUTPUT_NAME = "movie3.mp4"
+    URL = "https://www.youtube.com/watch?v=Ow6KUC60dME" 
+    OUTPUT_NAME = "game2.mp4"
     
-    START = 60
-    END   = 120
+    START = 0
+    END   = 60
     
     # ==========================================
 

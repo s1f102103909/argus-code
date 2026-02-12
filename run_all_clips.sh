@@ -1,8 +1,8 @@
 #!/bin/bash
 # 分割したクリップが入っているフォルダ
-CLIP_FOLDER="movie2_clips"
+CLIP_FOLDER="game1_clips"
 # 結果保存先
-RESULT_FOLDER="results_movie2_clips"
+RESULT_FOLDER="results_game1_clips"
 
 mkdir -p $RESULT_FOLDER
 
@@ -15,6 +15,6 @@ for video in "$CLIP_FOLDER"/*.mp4; do
       checkpoints \
       "$video" \
       "$RESULT_FOLDER" \
-      2.5 \
-      40
+      4.5 \
+      100
 done

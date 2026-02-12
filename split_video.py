@@ -2,7 +2,7 @@ import cv2
 import os
 import math
 
-def split_video(input_path, output_folder, segment_seconds=3.0, overlap_seconds=1.0):
+def split_video(input_path, output_folder, segment_seconds=2.0, overlap_seconds=1.0):
     """
     動画を指定した秒数ごとに分割し、のりしろ（オーバーラップ）を含めて保存します。
     
@@ -81,8 +81,8 @@ def split_video(input_path, output_folder, segment_seconds=3.0, overlap_seconds=
 
 if __name__ == "__main__":
     # ======= ここを設定してください =======
-    INPUT_VIDEO = "video/movie2.mp4"       # 分割したい動画ファイル名
-    OUTPUT_DIR = "movie2_clips"      # 保存先フォルダ名
+    INPUT_VIDEO = "video/movie3.mp4"       # 分割したい動画ファイル名
+    OUTPUT_DIR = "movie3_clips"      # 保存先フォルダ名
     # ====================================
 
     split_video(INPUT_VIDEO, OUTPUT_DIR, segment_seconds=3.0, overlap_seconds=1.0)

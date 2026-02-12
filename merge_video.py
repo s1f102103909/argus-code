@@ -3,7 +3,7 @@ import os
 import glob
 import numpy as np
 
-def merge_videos_with_crossfade(clips_folder, output_filename, overlap_seconds=1.0):
+def merge_videos_with_crossfade(clips_folder, output_filename, overlap_seconds=0.5):
     """
     分割生成された動画クリップを読み込み、オーバーラップ部分をクロスフェードして結合します。
     ※クリップ自体の長さ（2秒や5秒など）は自動取得するため、引数での指定は不要です。
@@ -117,14 +117,14 @@ if __name__ == "__main__":
     # ==========================================
     
     # 1. 生成されたクリップが入っているフォルダ名
-    CLIPS_FOLDER = "results_movie2_clips" 
+    CLIPS_FOLDER = "results_movie1_clips" 
     
     # 2. 完成した動画のファイル名
-    OUTPUT_FILE = "movie2_final_merged.mp4"
+    OUTPUT_FILE = "movie1_final_merged.mp4"
     
     # 3. 分割時に設定した「のりしろ（オーバーラップ）」の秒数
     # ※ split_video.py の overlap_seconds と同じ値にしてください
-    OVERLAP_SEC = 1.0
+    OVERLAP_SEC = 0.5
     
     # ※ 分割秒数（2秒や5秒など）の設定は不要です（自動判定されます）
     # ==========================================

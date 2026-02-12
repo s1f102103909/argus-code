@@ -1,55 +1,64 @@
 #!/bin/bash
+set -euo pipefail
 
-echo "Cleaning up shared memory cache..."
-rm -rf /dev/shm/argus_fast_cache
+GPU_ID=$1
+UNET_PATH=$2
+VIDEO_PATH=$3
+RESULT_FOLDER=$4
+GUIDANCE_SCALE=${5:-3}
+NUM_INFERENCE_STEPS=${6:-25}
+FRAME_RATE=${7:-60}
+NUM_FRAMES=${8:-90}
+DECODE_CHUNK_SIZE=${9:-40}
+NUM_FRAMES_BATCH=${10:-35}
+BLEND_FRAMES=${11:-8}
 
-# Set cache directories to the current working directory
-export HF_HOME=$(pwd)/hf_cache
-export TRITON_CACHE_DIR=$(pwd)/triton_cache
+export CUDA_VISIBLE_DEVICES="$GPU_ID"
+echo "[inference.sh] GPU=$CUDA_VISIBLE_DEVICES"
+echo "[inference.sh] video=$VIDEO_PATH"
+echo "[inference.sh] out=$RESULT_FOLDER"
+echo "[inference.sh] guidance=$GUIDANCE_SCALE steps=$NUM_INFERENCE_STEPS fps=$FRAME_RATE num_frames=$NUM_FRAMES"
+echo "[inference.sh] decode_chunk=$DECODE_CHUNK_SIZE num_frames_batch=$NUM_FRAMES_BATCH blend_frames=$BLEND_FRAMES"
+
+# HuggingFaceは永続キャッシュ（NFS）
+export HF_HOME=/nfs1/s3f102500025/cache/hf_shared
+mkdir -p "$HF_HOME"
+
+# キャッシュはノードローカル推奨（/dev/shm が大きいので安全）
+CACHE_ROOT=/dev/shm/$USER/argus_cache/${HOSTNAME}/$$
+mkdir -p "$CACHE_ROOT"
+trap 'rm -rf "$CACHE_ROOT"' EXIT INT TERM
+
+export TRITON_CACHE_DIR="$CACHE_ROOT/triton"
+export TORCHINDUCTOR_CACHE_DIR="$CACHE_ROOT/inductor"
+export CUDA_CACHE_PATH="$CACHE_ROOT/cuda_compute"
+mkdir -p "$TRITON_CACHE_DIR" "$TORCHINDUCTOR_CACHE_DIR" "$CUDA_CACHE_PATH"
+
+# allocator設定
 export PYTORCH_ALLOC_CONF="expandable_segments:True,max_split_size_mb:256"
-# 互換として併用するなら:
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,max_split_size_mb:256"
-mkdir -p $HF_HOME $TRITON_CACHE_DIR # Ensure directories exist
 
-unet_path=$1
-val_folder_or_video_path=$2
-val_save_folder=$3
-guidance_scale=${4:-3}
-num_inference_steps=${5:-25}
+mkdir -p "$RESULT_FOLDER"
 
-video_list=()
-# if val_folder_or_video_path is a folder, then process all videos in the folder
-if [ -d "$val_folder_or_video_path" ]; then
-    for video_path in "$val_folder_or_video_path"/*; do
-        video_list+=("$video_path")
-    done
-else
-    video_list+=("$val_folder_or_video_path")
-fi
-
-echo "Processing ${#video_list[@]} videos"
 accelerate launch --num_processes 1 --mixed_precision bf16 inference.py \
-    --val_base_folder ${video_list} \
-    --val_save_folder ${val_save_folder} \
-    --unet_path $unet_path \
-    --pretrained_model_name_or_path stabilityai/stable-video-diffusion-img2vid \
-    --decode_chunk_size 16 \
-    --noise_aug_strength 0.01 \
-    --motion_bucket_id 50 \
-    --guidance_scale $guidance_scale \
-    --frame_rate 24 \
-    --height 512 --width 1024 \
-    --fixed_start_frame \
-    --num_frames 96 \
-    --num_inference_steps $num_inference_steps \
-    --inference_final_rotation 0 \
-    --rotation_during_inference \
-    --extended_decoding \
-    --blend_decoding_ratio 16 \
-    --blend_frames 8 \
-    --seed 42 \
-    --num_frames_batch 40 \
-
-       # --predict_camera_motion \
-
-    
+  --val_base_folder "$VIDEO_PATH" \
+  --val_save_folder "$RESULT_FOLDER" \
+  --unet_path "$UNET_PATH" \
+  --pretrained_model_name_or_path stabilityai/stable-video-diffusion-img2vid \
+  --decode_chunk_size "$DECODE_CHUNK_SIZE" \
+  --noise_aug_strength 0.01 \
+  --motion_bucket_id 50 \
+  --guidance_scale "$GUIDANCE_SCALE" \
+  --frame_rate "$FRAME_RATE" \
+  --height 512 --width 1024 \
+  --fixed_start_frame \
+  --num_frames "$NUM_FRAMES" \
+  --num_inference_steps "$NUM_INFERENCE_STEPS" \
+  --inference_final_rotation 0 \
+  --rotation_during_inference \
+  --extended_decoding \
+  --blend_decoding_ratio 16 \
+  --blend_frames "$BLEND_FRAMES" \
+  --seed 42 \
+  --num_frames_batch "$NUM_FRAMES_BATCH" \
+  --fixed_fov 65
